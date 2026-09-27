@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PRAGMA — Oil India Limited HSE Safety Intelligence Platform</title>
+<link rel="stylesheet" href="styles.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js" defer></script>
+<script src="engine.js" defer></script>
+<script src="store.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<div class="app-shell">
+  <!-- SIDEBAR (Section 2 Reference) -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">◆</span>
+      <span class="brand-name">PRAGMA</span>
+    </div>
+    <nav class="nav-list">
+      <a class="nav-item active" data-screen="overview" href="#overview">Overview</a>
+      <a class="nav-item" data-screen="classify" href="#classify">Classify Report</a>
+      <a class="nav-item" data-screen="queue" href="#queue">Reviewer Queue <span class="nav-badge" id="queue-badge">4</span></a>
+      <a class="nav-item" data-screen="sitemap" href="#sites">Site Risk Map</a>
+      <a class="nav-item" data-screen="lsr" href="#lsr">LSR Analytics</a>
+      <a class="nav-item" data-screen="trends" href="#trends">Trends &amp; Patterns</a>
+      <a class="nav-item" data-screen="health" href="#model">Model Health</a>
+      <a class="nav-item" data-screen="settings" href="#settings">System Info</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN COLUMN (Section 2 Reference) -->
+  <div class="main-column">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="env-badge">Prototype Environment · Synthetic Data</span>
+      </div>
+      <div class="topbar-right">
+        <button class="cmdk-trigger" id="cmd-trigger-btn">⌘K <span>Search</span></button>
+        <span class="timestamp">Duliajan HSSE Cluster</span>
+      </div>
+    </header>
+
+    <main class="page-content" id="page-root">
+
+      <!-- 4.1 OVERVIEW SCREEN -->
+      <section class="screen-view active" id="screen-overview">
+        <h1 class="heading">Overview</h1>
+        
+        <!-- 5x KPI Cards Row (Section 4.1 Layout) -->
+        <div class="kpi-row" style="display:grid;grid-template-columns:repeat(5,1fr);gap:var(--sp-4);margin:var(--sp-5) 0;">
+          <div class="kpi-card">
+            <span class="kpi-label">Processed Reports</span>
+            <span class="kpi-value" id="kpi-total">1,248</span>
+            <span class="kpi-delta up">▲ +42 this week</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">SIF-Flagged</span>
+            <span class="kpi-value" style="color:var(--accent-orange)" id="kpi-sif">361</span>
+            <span class="kpi-delta up">▲ 3 vs last week</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Ontology Match %</span>
+            <span class="kpi-value" style="color:var(--accent-cyan)">45.2%</span>
+            <span class="kpi-delta down">▼ Layer 1 coverage</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Pending Reviews</span>
+            <span class="kpi-value" style="color:var(--accent-orange)" id="kpi-pending">4</span>
+            <span class="kpi-delta up">▲ Action required</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Override Rate</span>
+            <span class="kpi-value" style="color:var(--accent-cyan)">4.2%</span>
+            <span class="kpi-delta down">▼ Target &lt; 5%</span>
+          </div>
+        </div>
+
+        <!-- 2-Column Split: Top Risk Sites + Recent Activity -->
+        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:var(--sp-5);">
+          <div class="data-card">
+            <h3 class="heading" style="font-size:var(--fs-md);margin-bottom:var(--sp-3);">Top Risk Sites</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Site Sector</th>
+                  <th class="numeric">Total</th>
+                  <th class="numeric">SIF</th>
+                  <th class="numeric">SIF Rate</th>
+                </tr>
+              </thead>
+              <tbody id="overview-sites-table"></tbody>
+            </table>
+          </div>
+
+          <div class="data-card">
+            <h3 class="heading" style="font-size:var(--fs-md);margin-bottom:var(--sp-3);">Recent Activity</h3>
+            <div id="overview-activity-list" style="display:flex;flex-direction:column;gap:var(--sp-2);"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4.2 CLASSIFY REPORT SCREEN -->
+      <section class="screen-view" id="screen-classify">
+        <h1 class="heading" style="margin-bottom:var(--sp-4)">Classify Safety Report</h1>
+        <div style="display:grid;grid-template-columns:0.9fr 1.1fr;gap:var(--sp-5);height:100%;">
+          <div class="data-card">
+            <div style="margin-bottom:var(--sp-3)">
+              <label class="kpi-label" style="display:block;margin-bottom:var(--sp-1)">Quick Load Sample Report</label>
+              <select class="sample-select" id="sample-report-select" style="width:100%;background:var(--bg-base);border:1px solid var(--border-hairline);color:var(--text-primary);padding:var(--sp-2);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:var(--fs-sm);"></select>
+            </div>
+            <div style="margin-bottom:var(--sp-3)">
+              <label class="kpi-label" style="display:block;margin-bottom:var(--sp-1)">Report Narrative (English / Transliterated)</label>
+              <textarea class="report-input" id="report-input-text" rows="10" placeholder="Paste free-text safety observation or incident narrative here..." style="width:100%;background:var(--bg-base);border:1px solid var(--border-hairline);color:var(--text-primary);padding:var(--sp-3);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:13px;line-height:1.6;resize:vertical;"></textarea>
+            </div>
+            <div id="classify-progress" style="display:none;margin-bottom:var(--sp-3);font-size:var(--fs-xs);color:var(--accent-orange);font-family:var(--font-mono)">
+              ⏳ <span id="classify-step-text">Preprocessing / Ontology Match / Layer Assessment...</span>
+            </div>
+            <button class="btn-primary" id="analyze-btn" style="width:100%">Analyze Report</button>
+          </div>
+
+          <div class="data-card result-panel" id="classify-result-card" style="display:none">
+            <div class="result-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-4);padding-bottom:var(--sp-3);border-bottom:1px solid var(--border-hairline)">
+              <span class="badge-sif" id="res-verdict-badge">SIF-Potential</span>
+              <div class="confidence">
+                <span class="confidence-value mono" id="res-confidence">0.96</span>
+                <span class="confidence-track"><span class="confidence-fill" id="res-confidence-fill" style="width:96%"></span></span>
+              </div>
+            </div>
+
+            <div style="margin-bottom:var(--sp-3)">
+              <span class="kpi-label" style="display:block;margin-bottom:var(--sp-1)">Triggered IOGP Life-Saving Rules</span>
+              <div id="res-lsr-chips" style="display:flex;gap:var(--sp-1);flex-wrap:wrap"></div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);margin-bottom:var(--sp-3)">
+              <div style="background:var(--bg-base);padding:var(--sp-2) var(--sp-3);border:1px solid var(--border-hairline);border-radius:var(--radius-sm)">
+                <span class="kpi-label" style="display:block;font-size:10px">Energy Type</span>
+                <span class="mono" id="res-energy" style="font-weight:600;color:var(--text-primary)">Thermal / Flammable</span>
+              </div>
+              <div style="background:var(--bg-base);padding:var(--sp-2) var(--sp-3);border:1px solid var(--border-hairline);border-radius:var(--radius-sm)">
+                <span class="kpi-label" style="display:block;font-size:10px">Barrier Status</span>
+                <span class="mono" id="res-barrier" style="font-weight:600;color:var(--text-primary)">Absent</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom:var(--sp-4)">
+              <span class="kpi-label" style="display:block;margin-bottom:var(--sp-1)">Highlighted Verbatim Evidence</span>
+              <p class="report-text" id="res-evidence-text"></p>
+            </div>
+
+            <div style="margin-bottom:var(--sp-4);background:var(--state-flagged-bg);border:1px solid var(--accent-orange);padding:var(--sp-3);border-radius:var(--radius-sm);color:var(--accent-orange);font-size:var(--fs-sm)">
+              <strong>Recommended Operational Action:</strong> <span id="res-action-text"></span>
+            </div>
+
+            <button class="btn-secondary" id="route-queue-btn" style="width:100%">Send to Reviewer Queue</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4.3 REVIEWER QUEUE SCREEN -->
+      <section class="screen-view" id="screen-queue">
+        <h1 class="heading" style="margin-bottom:var(--sp-4)">Human Reviewer Queue</h1>
+        <div class="page-queue" style="display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 160px);background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--radius-lg);overflow:hidden;">
+          <!-- Dense Left Rail -->
+          <div class="queue-rail" style="border-right:1px solid var(--border-hairline);overflow-y:auto;padding:var(--sp-2);" id="queue-rail-items"></div>
+
+          <!-- Wide Right Detail Pane -->
+          <div class="queue-detail" style="padding:var(--sp-5);overflow-y:auto;display:flex;flex-direction:column;gap:var(--sp-4);" id="queue-detail-pane"></div>
+        </div>
+      </section>
+
+      <!-- 4.4 SITE RISK MAP SCREEN -->
+      <section class="screen-view" id="screen-sitemap">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-4)">
+          <h1 class="heading">Site Risk Map &amp; Ranking</h1>
+          <div class="view-toggle">
+            <button class="active" id="btn-view-map" onclick="toggleSiteView('map')">Map</button>
+            <button id="btn-view-table" onclick="toggleSiteView('table')">Table</button>
+          </div>
+        </div>
+
+        <!-- Map View (Bubble Field Layout 4.4) -->
+        <div id="site-map-view" class="bubble-field"></div>
+
+        <!-- Table View -->
+        <div id="site-table-view" class="data-card" style="display:none">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Site Sector Name</th>
+                <th>Region</th>
+                <th class="numeric">Total Reports</th>
+                <th class="numeric">SIF Precursors</th>
+                <th class="numeric">SIF Rate</th>
+                <th>Risk Level</th>
+              </tr>
+            </thead>
+            <tbody id="sitemap-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 4.5 LSR ANALYTICS SCREEN -->
+      <section class="screen-view" id="screen-lsr">
+        <h1 class="heading" style="margin-bottom:var(--sp-4)">IOGP Life-Saving Rules Analytics</h1>
+        <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:var(--sp-5)">
+          <div class="data-card">
+            <h3 class="heading" style="font-size:var(--fs-md);margin-bottom:var(--sp-3)">Multi-Label LSR Distribution (SIF vs Non-SIF)</h3>
+            <div style="height:320px"><canvas id="chart-lsr-bar"></canvas></div>
+          </div>
+          <div class="data-card">
+            <h3 class="heading" style="font-size:var(--fs-md);margin-bottom:var(--sp-3)">Barrier Failure Mode Breakdown</h3>
+            <div style="height:320px"><canvas id="chart-barrier-donut"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4.6 TRENDS & PATTERNS SCREEN -->
+      <section class="screen-view" id="screen-trends">
+        <h1 class="heading" style="margin-bottom:var(--sp-4)">Trends &amp; Pattern Clustering</h1>
+        <div class="data-card" style="margin-bottom:var(--sp-5)">
+          <h3 class="heading" style="font-size:var(--fs-md);margin-bottom:var(--sp-3)">12-Week SIF-Precursor Rate Trend per Site Cluster (%)</h3>
+          <div style="height:260px"><canvas id="chart-trend-line"></canvas></div>
+        </div>
+
+        <h3 class="heading" style="font-size:var(--fs-md);margin-bottom:var(--sp-3)">Detected Systemic Risk Pattern Clusters</h3>
+        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:var(--sp-4)">
+          <div class="data-card flagged">
+            <span class="corner-tick"></span>
+            <div class="mono" style="color:var(--accent-orange);font-weight:700;font-size:var(--fs-lg)">14 Occurrences</div>
+            <div style="font-weight:600;margin:var(--sp-1) 0">Hot Work + Missing Gas Test</div>
+            <div style="font-size:var(--fs-xs);color:var(--text-secondary);margin-bottom:var(--sp-2)">Duliajan Field Cluster (Pads 3, 5 &amp; 7)</div>
+            <span class="chip active">Hot Work</span>
+          </div>
+          <div class="data-card flagged">
+            <span class="corner-tick"></span>
+            <div class="mono" style="color:var(--accent-orange);font-weight:700;font-size:var(--fs-lg)">9 Occurrences</div>
+            <div style="font-weight:600;margin:var(--sp-1) 0">Scaffold Guardrail Deficiencies</div>
+            <div style="font-size:var(--fs-xs);color:var(--text-secondary);margin-bottom:var(--sp-2)">Moran Workover Area</div>
+            <span class="chip active">Working at Height</span>
+          </div>
+          <div class="data-card safe">
+            <span class="corner-tick"></span>
+            <div class="mono" style="color:var(--accent-cyan);font-weight:700;font-size:var(--fs-lg)">11 Occurrences</div>
+            <div style="font-weight:600;margin:var(--sp-1) 0">LOTO Verification Omitted</div>
+            <div style="font-size:var(--fs-xs);color:var(--text-secondary);margin-bottom:var(--sp-2)">Switchgear &amp; Pump Station #2</div>
+            <span class="chip lsr">Energy Isolation</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4.7 MODEL HEALTH SCREEN -->
+      <section class="screen-view" id="screen-health">
+        <h1 class="heading" style="margin-bottom:var(--sp-4)">Model Performance &amp; Health</h1>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-4);margin-bottom:var(--sp-5)">
+          <div class="kpi-card">
+            <span class="kpi-label">Ontology Coverage %</span>
+            <span class="kpi-value" style="color:var(--accent-cyan)">45.2%</span>
+            <span class="kpi-delta down">Instant Layer 1 Match</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Reviewer Override Rate</span>
+            <span class="kpi-value" style="color:var(--accent-cyan)">4.2%</span>
+            <span class="kpi-delta down">▼ Target &lt; 5%</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Current F2 Score</span>
+            <span class="kpi-value" style="color:var(--accent-orange)">0.82</span>
+            <span class="kpi-delta up">▲ Weighted 2x for Recall</span>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <h3 class="heading" style="font-size:var(--fs-md);margin-bottom:var(--sp-3)">Precision / Recall / F2 Score Trajectory</h3>
+          <div style="height:280px"><canvas id="chart-model-perf"></canvas></div>
+        </div>
+      </section>
+
+      <!-- 4.8 SYSTEM INFO SCREEN -->
+      <section class="screen-view" id="screen-settings">
+        <h1 class="heading" style="margin-bottom:var(--sp-4)">System Architecture &amp; Info</h1>
+        <div style="max-width:800px;display:flex;flex-direction:column;gap:var(--sp-5);">
+          <div>
+            <h3 class="heading" style="font-size:var(--fs-md);margin-bottom:var(--sp-2)">On-Premise Deployment Pipeline</h3>
+            <p style="color:var(--text-secondary);font-size:var(--fs-sm);line-height:1.6;margin-bottom:var(--sp-3)">
+              PRAGMA is packaged into an isolated Docker container configured for on-premise execution on Oil India Limited CPU server clusters.
+            </p>
+            <div style="background:var(--bg-surface);border:1px solid var(--border-hairline);padding:var(--sp-4);border-radius:var(--radius-md);font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-secondary)">
+              [Report Text Ingestion] → [Layer 1: Energy × Barrier Ontology Engine (Fast Path)]<br/>
+              &nbsp;&nbsp;&nbsp;&nbsp;├── Clear Match (45%): Instant SIF Verdict + Verbatim Citation<br/>
+              &nbsp;&nbsp;&nbsp;&nbsp;└── Ambiguous Cases: Escalated to Layer 2<br/>
+              [Layer 2: Fine-Tuned DistilRoBERTa Binary Classifier + Multi-Label IOGP Transformer]<br/>
+              [LIME / spaCy Evidence Extractor] → [Human Reviewer Queue (Accept/Override/Escalate)]<br/>
+              [PostgreSQL + pgvector Engine] → [On-Premise CPU Server (Zero Cloud Dependency)]
+            </div>
+          </div>
+
+          <div>
+            <h3 class="heading" style="font-size:var(--fs-md);margin-bottom:var(--sp-2)">Data Source Disclosure &amp; Governance</h3>
+            <p style="color:var(--text-secondary);font-size:var(--fs-sm);line-height:1.6">
+              All field reports evaluated in this prototype environment are synthetic data models derived from public IOGP safety reports and OIL field operational scenarios. No confidential Oil India Limited telemetry is transmitted externally.
+            </p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- CMD+K MODAL -->
+<div class="modal-overlay" id="cmd-modal">
+  <div class="modal-container">
+    <input type="text" class="cmd-input" id="cmd-input" placeholder="Type a command or search screen..." autocomplete="off"/>
+    <div class="cmd-list" id="cmd-results"></div>
+  </div>
+</div>
+
+<!-- OVERRIDE MODAL -->
+<div class="modal-overlay" id="override-modal">
+  <div class="modal-container" style="padding:var(--sp-5)">
+    <h3 class="heading" style="margin-bottom:var(--sp-2)">Override SIF Classification</h3>
+    <p style="font-size:var(--fs-xs);color:var(--text-secondary);margin-bottom:var(--sp-4)">Provide a mandatory justification for overriding PRAGMA's SIF-potential flag.</p>
+    <textarea class="report-input" id="override-reason-text" placeholder="Enter override justification..." rows="3" style="width:100%;margin-bottom:var(--sp-4)"></textarea>
+    <div style="display:flex;justify-content:flex-end;gap:var(--sp-2)">
+      <button class="btn-override" onclick="closeOverrideModal()">Cancel</button>
+      <button class="btn-primary" onclick="submitOverride()">Submit Override</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
